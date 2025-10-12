@@ -1,2 +1,4 @@
 build/src
 build/*.o
+build/*.elf
+build/*.map
