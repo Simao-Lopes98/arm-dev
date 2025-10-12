@@ -18,6 +18,16 @@ PRJ_DUMP = $(BUILD_DIR)/prj.lst
 ELF = $(BUILD_DIR)/prj.elf
 HEX = $(FLASH_DIR)/prj.hex
 
+all: $(HEX)
+
+# Compile
+$(OBJ): $(SRC) 
+	$(CC) -c $< -o $@
+
+# Link
+$(ELF): $(OBJ)
+	$(CC) -mmcu=$(MCU) $^ -o $@
+
 #.c into .o
 build: $(OBJ)
 $(OBJ): $(SRC) 
