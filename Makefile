@@ -1,37 +1,51 @@
-# makefile
+TARGET := blink
+BUILD_TYPE = Release
 
-# Paths
-SRC_DIR = src
-BUILD_DIR = build
-FLASH_DIR = flash
+TRIPLE  = 	arm-none-eabi
+CC 		=	${TRIPLE}-gcc
+LD 		= 	${TRIPLE}-ld
+AS 		= 	${TRIPLE}-as
+GDB 	= 	${TRIPLE}-gdb
+OBJCOPY =  	${TRIPLE}-objcopy
 
-# Tools
-CC = arm-none-eabi-gcc
+INCFLAGS := -Iinclude -Ilib/include
+LDFLAGS := -mcpu=cortex-m3 -mfloat-abi=soft -mthumb -nostdlib $(INCFLAGS)  -Wl,--gc-sections,--print-gc-sections,--cref
+CFLAGS := -mcpu=cortex-m3 -mfloat-abi=soft -mthumb  -nostdlib $(INCFLAGS) -std=gnu11 -Os -Wall -fno-tree-loop-distribute-patterns -fdata-sections -ffunction-sections
 
-# Flags
 
-# File names
-SRC = $(SRC_DIR)/main.c
-OBJ = $(BUILD_DIR)/main.o
-PRJ_DUMP = $(BUILD_DIR)/prj.lst
+ifeq ($(BUILD_TYPE), Debug)
+CFLAGS += -g -gdwarf-2
+endif
 
-ELF = $(BUILD_DIR)/prj.elf
-HEX = $(FLASH_DIR)/prj.hex
+# Generate dependency information
+CFLAGS += -MMD -MP 
 
-all: $(HEX)
+SRC_DIRS := src
+BUILD_DIR:= build
 
-# Compile
-$(OBJ): $(SRC) 
-	$(CC) -c $< -o $@
+LINKER_SCRIPT = linker.ld
 
-# Link
-$(ELF): $(OBJ)
-	$(CC) -mmcu=$(MCU) $^ -o $@
+SRCS := $(shell find $(SRC_DIRS) -name '*.c')
+OBJS := $(SRCS:%.c=$(BUILD_DIR)/%.o) 
 
-#.c into .o
-build: $(OBJ)
-$(OBJ): $(SRC) 
-	$(CC) -c $< -o $@
+$(BUILD_DIR)/$(TARGET).elf: $(OBJS) 
+	@$(CC) $(LDFLAGS) -o $@ $(OBJS) -T$(LINKER_SCRIPT) -Wl,-Map="$(BUILD_DIR)/$(TARGET).map"
+
+$(BUILD_DIR)/%.o: %.c
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/%.o: %.s
+	@mkdir -p $(dir $@)
+	$(CC) $(ASFLAGS) -c $< -o $@
+
+flash:
+	@# openocd -d2 -s /opt/openocd/scripts -f interface/stlink-v2.cfg -c "transport select hla_swd" -f target/stm32f1x.cfg -c "program {build/$(TARGET).elf}  verify reset; shutdown;"
+	openocd -d2 -f interface/stlink.cfg -c "transport select hla_swd" -f target/stm32f1x.cfg -c "program {build/$(TARGET).elf}  verify reset; shutdown;"
+
+all: $(BUILD_DIR)/$(TARGET).elf
 
 clean:
-	rm -f $(BUILD_DIR)/*.o
+	rm -rf 	$(BUILD_DIR)/$(SRC_DIRS)\
+			$(BUILD_DIR)/$(TARGET).elf\
+			$(BUILD_DIR)/$(TARGET).map
