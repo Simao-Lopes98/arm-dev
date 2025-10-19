@@ -22,7 +22,6 @@ CFLAGS += -MMD -MP
 
 SRC_DIRS := src
 BUILD_DIR:= build
-
 LINKER_SCRIPT = linker.ld
 
 SRCS := $(shell find $(SRC_DIRS) -name '*.c')
