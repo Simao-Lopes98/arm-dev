@@ -24,10 +24,20 @@ To build use the following:
 ```bash
 make
 ```
-This will create the object files and the .elf file. Additionally, dependency and .map files are generated. 
+This will create the object files and the .elf file. Additionally, dependency and .map files are generated.
+
+To flash to the MCU use the following:
+```bash
+make flash
+```
+
+To clear all object and elf files:
+```bash
+make clean
+```
 
 ### Documentation
 
-Refer to the project documentation for setup instructions and example projects.
+Refer to the project documentation for system clarification.
 
 ---
