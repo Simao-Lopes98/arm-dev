@@ -10,7 +10,7 @@ OBJCOPY =  	${TRIPLE}-objcopy
 
 INCFLAGS := -Iinclude -Ilib/include
 LDFLAGS := -mcpu=cortex-m3 -mfloat-abi=soft -mthumb -nostdlib $(INCFLAGS)  -Wl,--gc-sections,--print-gc-sections,--cref
-CFLAGS := -mcpu=cortex-m3 -mfloat-abi=soft -mthumb  -nostdlib $(INCFLAGS) -std=gnu11 -Os -Wall -fno-tree-loop-distribute-patterns -fdata-sections -ffunction-sections
+CFLAGS := -mcpu=cortex-m3 -mthumb -mno-thumb-interwork -mfpu=vfp -msoft-float -mfix-cortex-m3-ldrd -nostdlib $(INCFLAGS) -std=gnu11 -Os -Wall -fno-tree-loop-distribute-patterns -fdata-sections -ffunction-sections
 
 
 ifeq ($(BUILD_TYPE), Debug)
@@ -24,8 +24,17 @@ SRC_DIRS := src
 BUILD_DIR:= build
 LINKER_SCRIPT = linker.ld
 
-SRCS := $(shell find $(SRC_DIRS) -name '*.c')
-OBJS := $(SRCS:%.c=$(BUILD_DIR)/%.o) 
+SRCS_C := $(shell find $(SRC_DIRS) -name '*.c')
+SRCS_S := $(shell find $(SRC_DIRS) -name '*.S')
+
+SRCS := $(SRCS_C) $(SRCS_S)
+
+# Replace .c with $(BUILD_DIR)/%.o for C source files
+OBJS_C := $(SRCS_C:%.c=$(BUILD_DIR)/%.o)
+# Replace .S with $(BUILD_DIR)/%.o for Assembly source files
+OBJS_S := $(SRCS_S:%.S=$(BUILD_DIR)/%.o)
+
+OBJS := $(OBJS_C) $(OBJS_S)
 
 $(BUILD_DIR)/$(TARGET).elf: $(OBJS) 
 	@$(CC) $(LDFLAGS) -o $@ $(OBJS) -T$(LINKER_SCRIPT) -Wl,-Map="$(BUILD_DIR)/$(TARGET).map"
