@@ -1,13 +1,14 @@
 /* startup.S */
 
-// Crucial to set the Thumb bit to 1 on the Reset_Handler
+// Crucial to set the Thumb bit to 1 on the Reset_Handler!!
 .thumb
 .thumb_func
 
 .global Reset_Handler
 .extern main
 
-// Reset handler - 1st register on the Stack
+// Reset handler - Clear the BSS and move data contents from FLASH to SRAM. 
+// Branch to main once is done.
 Reset_Handler:
 
     // Pointing to the beginning of the stack is done in vector stable
@@ -18,9 +19,9 @@ Reset_Handler:
     LDR R0, =0          // load zero
 
 clearBss:
-    SUB R3, R2, R1
-    CMP R3, #0      // BSS is cleared
-    BEQ bssCleared
+    SUB R3, R2, R1  
+    CMP R3, #0      // Compare if _ebss is equal to _sbss
+    BEQ bssCleared  // BSS is cleared
     STR R0, [R1]    // Store the value in R0 to the address in R1.
     ADD R1, R1, #4  // Incrment R1 by 4 bytes (32 bits)
     B clearBss      // loop back to clearBss
@@ -35,17 +36,17 @@ bssCleared:
 copyData:
     SUB R4, R2, R1
     CMP R4, #0
-    BEQ dataCopied
-    LDR R0, [R3]
-    STR R0, [R1]
-    ADD R1, R1, #4
+    BEQ dataCopied  
+    LDR R0, [R3]    // Load the contents pointed by _la_data (on FLASH) to R0
+    STR R0, [R1]    // Store the contens from R0 to _sdata
+    ADD R1, R1, #4  // Increment R1 and R3 by 4 bytes (2 words)
     ADD R3, R3, #4
-    B copyData
+    B copyData      // loop to copyData
 
 dataCopied:
-    BL main
+    BL main         // Branch to main
 
 hang:
-    B hang
+    B hang          // Forever loop
 
 
