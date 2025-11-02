@@ -1,4 +1,4 @@
-/* startup.c
+/* startupPrj.c
 Startup declarations and function for the STM32F103C8T6
 See: RM0008 10.1.2 Interrupt and exception vectors, Table 63. 
 Vector table for other STM32F10xxx devices
@@ -11,17 +11,17 @@ Vector table for other STM32F10xxx devices
 #define SRAM_END ((SRAM_START) + (SRAM_SIZE))
 #define STACK_START SRAM_END
 
-extern uint32_t _etext;
-extern uint32_t _sdata;
-extern uint32_t _edata;
-extern uint32_t _la_data;
+// extern uint32_t _etext;
+// extern uint32_t _sdata;
+// extern uint32_t _edata;
+// extern uint32_t _la_data;
+extern uint32_t _estack;
 
-extern uint32_t _sbss;
-extern uint32_t _ebss;
+// extern uint32_t _sbss;
+// extern uint32_t _ebss;
 
-int main(void);
-
-void Reset_Handler(void);
+// Reset_Handler defined in startup.S
+extern void Reset_Handler(void);
 void Default_Handler(void);
 
 // Weak function prototypes for the vector table so that they can easily be redefined
@@ -96,7 +96,7 @@ void DMA2_Channel4_5_IRQHandler(void) __attribute__((weak, alias("Default_Handle
 
 // Define the veector table and put it on specific memory section named .isr_vector
 uint32_t vectors[] __attribute__((section(".isr_vector"))) = {
-    STACK_START,
+    (uint32_t)&_estack,
     (uint32_t)Reset_Handler,
     (uint32_t)NMI_Handler,
     (uint32_t)HardFault_Handler,
@@ -179,28 +179,4 @@ void Default_Handler(void)
 {
   while (1)
     ;
-}
-
-// Command: reset memory and restart user program
-void Reset_Handler(void)
-{
-  // copy .data section to SRAM
-  uint8_t *pSramData = (uint8_t *)&_sdata;    // sram
-  uint8_t *pFlashData = (uint8_t *)&_la_data; // flash
-  uint32_t data_size = (uint32_t)&_edata - (uint32_t)&_sdata;
-  for (uint32_t i = 0; i < data_size; i++)
-  {
-    *pSramData++ = *pFlashData++;
-  }
-
-  // init. the .bss section to zero in SRAM
-  uint32_t bss_size = (uint32_t)&_ebss - (uint32_t)&_sbss;
-  uint8_t *pBssData = (uint8_t *)&_sbss;
-  for (uint32_t i = 0; i < bss_size; i++)
-  {
-    *pBssData++ = 0;
-  }
-
-  // now invoke main
-  main();
 }
