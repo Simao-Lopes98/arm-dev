@@ -40,7 +40,7 @@ typedef struct
 
 /* forward decl */
 
-extern GPIO_STATUS gpio_drv_init (gpio_inst_t gpio_inst, gpio_t * gpio_drv);
+extern GPIO_STATUS gpio_drv_init (gpio_t * gpio_drv, gpio_inst_t gpio_inst);
 
 
 #endif /* GPIO_H */

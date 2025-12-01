@@ -15,7 +15,8 @@ static uint32_t * gpio_instance [] =
     (uint32_t *) GPIOE_BASE
 };
 
-GPIO_STATUS gpio_drv_init (gpio_inst_t gpio_inst, gpio_t * gpio_drv)
+GPIO_STATUS gpio_drv_init (gpio_t * gpio_drv, gpio_inst_t gpio_inst)
 {
     gpio_drv = (gpio_t *) gpio_instance[gpio_inst];
+    return GPIO_OK;
 }
