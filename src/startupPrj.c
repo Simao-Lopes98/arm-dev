@@ -11,14 +11,8 @@ Vector table for other STM32F10xxx devices
 #define SRAM_END ((SRAM_START) + (SRAM_SIZE))
 #define STACK_START SRAM_END
 
-// extern uint32_t _etext;
-// extern uint32_t _sdata;
-// extern uint32_t _edata;
-// extern uint32_t _la_data;
 extern uint32_t _estack;
 
-// extern uint32_t _sbss;
-// extern uint32_t _ebss;
 
 // Reset_Handler defined in startup.S
 extern void Reset_Handler(void);
