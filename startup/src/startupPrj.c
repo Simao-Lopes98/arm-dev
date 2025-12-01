@@ -5,14 +5,9 @@ Vector table for other STM32F10xxx devices
 */
 
 #include <stdint.h>
-
-#define SRAM_START 0x20000000U
-#define SRAM_SIZE (20U * 1024U) // 20KB
-#define SRAM_END ((SRAM_START) + (SRAM_SIZE))
-#define STACK_START SRAM_END
+#include "startup.h"
 
 extern uint32_t _estack;
-
 
 // Reset_Handler defined in startup.S
 extern void Reset_Handler(void);
