@@ -4,11 +4,12 @@
 See RM0008_ref section 9 for details
 */
 
-#include <stdio.h>
-#include <stm32f1xx.h>
-
 #ifndef GPIO_H
 #define GPIO_H
+
+#include <stdio.h>
+#include <stm32f1xx.h>
+#include "gpio.h"
 
 typedef enum
 {
@@ -18,7 +19,7 @@ typedef enum
 
 typedef enum
 {
-    GPIO_A,
+    GPIO_A = 0,
     GPIO_B,
     GPIO_C,
     GPIO_D,
@@ -40,7 +41,7 @@ typedef struct
 
 /* forward decl */
 
-extern GPIO_STATUS gpio_drv_init (gpio_t * gpio_drv, gpio_inst_t gpio_inst);
+extern gpio_t * gpio_drv_init (gpio_inst_t gpio_inst);
 
 
 #endif /* GPIO_H */
