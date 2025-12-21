@@ -18,7 +18,7 @@ static uint32_t * const gpio_instance [] =
 gpio_t * gpio_drv_init (gpio_inst_t gpio_inst)
 {
     /* Turn the IO clk if not */
-    if ( RCC->APB2ENR & RCC_APB2ENR_IOPCEN == 0)
+    if ( (RCC->APB2ENR & RCC_APB2ENR_IOPCEN) == 0)
     {
         RCC->APB2ENR |= RCC_APB2ENR_IOPCEN;
     }
