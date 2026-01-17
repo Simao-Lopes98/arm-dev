@@ -3,32 +3,38 @@
 #include <stdio.h>
 #include <stm32f1xx.h>
 #include <delay.h>
+#include <stddef.h>  // for size_t
+#include <unistd.h>  // for STDERR_FILENO
 #include "gpio.h"
 
-int _write(int fd, const char *buf, int len)
+
+void uart_write (char * buf, size_t len)
 {
 	while ((USART1->SR & USART_SR_TXE) == 0)
-	{/* Wait for */	}
+	{/* Wait for TX buffer to be ready */	}
 	
+	/* Test with A */
 	USART1->DR = 'A';
-	return 1;
+}
+
+int _write(int fd, char *buf, size_t len)
+{
+	uart_write (buf, len);
+	return len;
 }
 
 int main(void)
 {
 
-	/* Init GPIO Port C */
-	RCC->APB2ENR |= RCC_APB2ENR_IOPCEN;
+	/* Init GPIO Port C, Init GPIO Port A , Init GPIO Port A, Init AFIO */
+	RCC->APB2ENR |= RCC_APB2ENR_IOPCEN | 
+					RCC_APB2ENR_IOPAEN |
+					RCC_APB2ENR_USART1EN | 
+					RCC_APB2ENR_AFIOEN;
 
 	/* Set GPIO on PORT C - P13 */
 	GPIOC->CRH &= ~(0xF << ((13 - 8) * 4));
 	GPIOC->CRH |=  (0x2 << ((13 - 8) * 4));
-
-	/* Enable USART CLK */
-	RCC->APB2ENR |= RCC_APB2ENR_USART1EN;
-
-	/* Init GPIO Port A */
-	RCC->APB2ENR |= RCC_APB2ENR_IOPAEN;
 
 	/* 
 	Configure as Alternate function output Push-pull 
@@ -39,7 +45,7 @@ int main(void)
 	GPIOA->CRH &= ~GPIO_CRH_CNF9_Msk;
 	GPIOA->CRH &= ~GPIO_CRH_MODE9_Msk;
 
-	/* MODE9 = 11 (50 MHz), CNF9 = 10 (AF push-pull) */
+	/* MODE9 = 11 (50 MHz), CNF9 = 10 (Alternate Function push-pull) */
 	GPIOA->CRH |=  GPIO_CRH_CNF9_1;
 	GPIOA->CRH |=  GPIO_CRH_MODE9_1 | GPIO_CRH_MODE9_0;
 

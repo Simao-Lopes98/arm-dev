@@ -8,11 +8,11 @@ AS 		= 	${TRIPLE}-as
 GDB 	= 	${TRIPLE}-gdb
 OBJCOPY =  	${TRIPLE}-objcopy
 
-LDFLAGS := -mcpu=cortex-m3 -mfloat-abi=soft -mthumb --specs=nosys.specs
+LDFLAGS := -mcpu=cortex-m3 -mfloat-abi=soft -mthumb --specs=nano.specs --specs=nosys.specs
 MAPFLAGS:= -Wl,--gc-sections,--print-gc-sections,--cref
 CFLAGS := -mcpu=cortex-m3 -mthumb -mno-thumb-interwork -mfpu=vfp -msoft-float\
  -mfix-cortex-m3-ldrd -std=gnu11 -Os -Wall -fno-tree-loop-distribute-patterns\
-  -fdata-sections -ffunction-sections
+  -fdata-sections -ffunction-sections -Werror
 
 ifeq ($(BUILD_TYPE), Debug)
 CFLAGS += -g -gdwarf-2
