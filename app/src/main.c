@@ -30,6 +30,7 @@ int main(void)
 	while(1){
 		/* Blink */
 		printf ("System heartbeat\r\n");
+		GPIOC->ODR ^= 1 << 13;
 		ms_delay(1000);
 	}
 }
