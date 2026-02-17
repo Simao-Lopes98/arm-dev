@@ -18,6 +18,7 @@
 #include <math.h>
 
 /* Macros */
+#define USART_RCV_BUFF_MAX_SIZE 64
 
 /* Type Definitions */
 typedef enum

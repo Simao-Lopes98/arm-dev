@@ -24,6 +24,10 @@ static STATUS checkUsartDrvNum (usartDrvNum_t usartNum);
 
 /* Public functions */
 
+/* 
+Initializes USART driver using [usartNum] to define the port and [baud]
+to define the baudrate
+*/
 STATUS usartDrvInit (usartDrvNum_t usartNum, uint32_t baud)
 {
     if (checkUsartDrvNum(usartNum) != OK)
@@ -63,6 +67,9 @@ STATUS usartDrvInit (usartDrvNum_t usartNum, uint32_t baud)
     return OK;
 }
 
+/* 
+Enables the USART driver using [usartNum] to define the port which to enable
+*/
 STATUS usartDrvEnable (usartDrvNum_t usartNum)
 {
     if (checkUsartDrvNum(usartNum) != OK)
@@ -76,6 +83,9 @@ STATUS usartDrvEnable (usartDrvNum_t usartNum)
     return OK;
 }
 
+/* 
+Stops the USART driver using [usartNum] to define the port which to stop
+*/
 STATUS usartDrvStop (usartDrvNum_t usartNum)
 {
     if (checkUsartDrvNum(usartNum) != OK)
@@ -90,7 +100,7 @@ STATUS usartDrvStop (usartDrvNum_t usartNum)
 }
 
 /* 
-Sets DR register to buf contents 
+Sets the DR register to buf contents 
 */
 void usartWrite (usartDrvNum_t usartNum, char * buf, size_t len)
 {
@@ -127,7 +137,7 @@ void usartWrite (usartDrvNum_t usartNum, char * buf, size_t len)
 }
 
 /*
-Sets buf to 
+Sets buf to the contents of the DR register
 */
 size_t usartRead (usartDrvNum_t usartNum, char* buf, size_t len)
 {
@@ -147,19 +157,31 @@ size_t usartRead (usartDrvNum_t usartNum, char* buf, size_t len)
     usartDrv = usartDrvs[usartNum];
 
     /* USART stopped or not enabled  */
-    if ((usartDrv->SR & USART_CR1_UE) == 0)
+    if ((usartDrv->CR1 & USART_CR1_UE) == 0)
     {
         return 0;
     }
 
     while ((usartDrv->SR & USART_SR_RXNE) == 0)
     { /* waiting for data */}
-    
-    while (count < len)
+
+    /* Got a char. Clearing RXNE */
+    usartDrv->SR &= ~USART_SR_RXNE;
+
+    while ( usartDrv->DR != '\r'&& 
+            usartDrv->DR != '\n'&& 
+            count < len)
     {
         buf [count] = usartDrv->DR;
         count++;
+        
+        while ((usartDrv->SR & USART_SR_RXNE) == 0)
+        { /* waiting for data */}
+
+        /* Got a char. Clearing RXNE */
+        usartDrv->SR &= ~USART_SR_RXNE;
     }
+    
     
     return count;
 }
@@ -186,13 +208,16 @@ static void usart1Init (void)
 	and Output mode, max speed
 	*/
 
-	/* Clear PA9 config */
-	GPIOA->CRH &= ~GPIO_CRH_CNF9_Msk;
-	GPIOA->CRH &= ~GPIO_CRH_MODE9_Msk;
+	/* Clear PA9 and P10 config */
+	GPIOA->CRH &= ~GPIO_CRH_CNF9_Msk | GPIO_CRH_CNF10_Msk;
+	GPIOA->CRH &= ~GPIO_CRH_MODE9_Msk| GPIO_CRH_CNF10_Msk;
 
 	/* MODE9 = 11 (50 MHz), CNF9 = 10 (Alternate Function push-pull) */
 	GPIOA->CRH |=  GPIO_CRH_CNF9_1;
 	GPIOA->CRH |=  GPIO_CRH_MODE9_1 | GPIO_CRH_MODE9_0;
+
+    /* MODE10 = 0, CNF10 = 1 (Input floating)*/
+    GPIOA->CRH |= GPIO_CRH_CNF10_0;
 }
 
 /* Check USART number input by user */
