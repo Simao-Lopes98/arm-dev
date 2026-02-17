@@ -9,7 +9,7 @@
 #include "uart.h"
 
 
-char msg[] = "A Inês é uma linda\r\n";
+char msg[USART_RCV_BUFF_MAX_SIZE];
 
 int main(void)
 {
@@ -26,11 +26,13 @@ int main(void)
 		
 	if (usartDrvEnable (USART_DRV_1) != OK)
 		while (1){/* system halt */}
-
+	int size = 0;
 	while(1){
 		/* Blink */
 		printf ("System heartbeat\r\n");
 		GPIOC->ODR ^= 1 << 13;
+		size = usartRead(USART_DRV_1, msg, USART_RCV_BUFF_MAX_SIZE);
+		printf(" Recv msg: %s with size: %d\r\n", msg, size);
 		ms_delay(1000);
 	}
 }
