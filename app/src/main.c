@@ -9,25 +9,7 @@
 #include "uart.h"
 
 
-void uart_write (char * buf, size_t len)
-{
-	while ((USART1->SR & USART_SR_TXE) == 0)
-	{ /* Wait for TX buffer to be ready */	}
-	
-	/* Test with A */
-	for (size_t i = 0; i < len; i++)
-	{
-		USART1->DR = buf[i];
-		/* Wait until transmit is done */
-		while (!(USART1->SR & USART_SR_TC));
-	}
-}
-
-int _write(int fd, char *buf, size_t len)
-{
-	uart_write (buf, len);
-	return len;
-}
+char msg[] = "A Inês é uma linda\r\n";
 
 int main(void)
 {
@@ -39,14 +21,15 @@ int main(void)
 	GPIOC->CRH &= ~(0xF << ((13 - 8) * 4));
 	GPIOC->CRH |=  (0x2 << ((13 - 8) * 4));
 
-
-	uartDrvInit (USART_DRV_1, 115200);
-	uartDrvEnable (USART_DRV_1);
+	if (usartDrvInit (USART_DRV_1, 115200) != OK)
+		while (1){/* system halt */}
+		
+	if (usartDrvEnable (USART_DRV_1) != OK)
+		while (1){/* system halt */}
 
 	while(1){
 		/* Blink */
-		GPIOC->ODR ^= 1 << 13;
-		printf("A Inês é uma linda\r\n");
+		printf ("System heartbeat\r\n");
 		ms_delay(1000);
 	}
 }
