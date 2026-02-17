@@ -10,21 +10,21 @@
 
 /* USART driver list */
 static USART_TypeDef * usartDrvs [4] = 
-    {
-    NULL,
-    USART1,
-    USART2,
-    USART3
-    };
+                    {
+                    NULL,
+                    USART1,
+                    USART2,
+                    USART3
+                    };
 
 /* Private function prototypes */
 static void usart1Init (void);
-static STATUS configBaud (USART_TypeDef * usart, uint32_t baud);
+static STATUS configUsartBaud (USART_TypeDef * usart, uint32_t baud);
 static STATUS checkUsartDrvNum (usartDrvNum_t usartNum);
 
 /* Public functions */
 
-STATUS uartDrvInit (usartDrvNum_t usartNum, uint32_t baud)
+STATUS usartDrvInit (usartDrvNum_t usartNum, uint32_t baud)
 {
     if (checkUsartDrvNum(usartNum) != OK)
         return ERROR;
@@ -39,17 +39,20 @@ STATUS uartDrvInit (usartDrvNum_t usartNum, uint32_t baud)
         break;
     case USART_DRV_2:
         /* TODO */
+        return ERROR;
         break;
     case USART_DRV_3:
         /* TODO */
+        return ERROR;
         break;
     
     default:
         /* Should not reach this */
+        return ERROR;
         break;
     }
 
-    if (configBaud (usartDrv, baud) != OK)
+    if (configUsartBaud (usartDrv, baud) != OK)
     {
         return ERROR;
     }
@@ -60,7 +63,7 @@ STATUS uartDrvInit (usartDrvNum_t usartNum, uint32_t baud)
     return OK;
 }
 
-STATUS uartDrvEnable (usartDrvNum_t usartNum)
+STATUS usartDrvEnable (usartDrvNum_t usartNum)
 {
     if (checkUsartDrvNum(usartNum) != OK)
         return ERROR;
@@ -73,7 +76,7 @@ STATUS uartDrvEnable (usartDrvNum_t usartNum)
     return OK;
 }
 
-STATUS uartDrvStop (usartDrvNum_t usartNum)
+STATUS usartDrvStop (usartDrvNum_t usartNum)
 {
     if (checkUsartDrvNum(usartNum) != OK)
         return ERROR;
@@ -86,8 +89,91 @@ STATUS uartDrvStop (usartDrvNum_t usartNum)
     return OK;
 }
 
+/* 
+Sets DR register to buf contents 
+*/
+void usartWrite (usartDrvNum_t usartNum, char * buf, size_t len)
+{
+    USART_TypeDef * usartDrv = NULL;
+
+    if (buf == NULL)
+    {
+        return;
+    }
+
+    if (checkUsartDrvNum (usartNum) != OK)
+    {
+        return;
+    }
+
+    usartDrv = usartDrvs[usartNum];
+
+    /* USART stopped or not enabled  */
+    if ((usartDrv->CR1 & USART_CR1_UE) == 0)
+    {
+        return;
+    }
+
+	while ((usartDrv->SR & USART_SR_TXE) == 0)
+	{ /* Wait for TX buffer to be ready */	}
+	
+	/* Set chars on DR buf */
+	for (size_t i = 0; i < len; i++)
+	{
+		usartDrv->DR = buf[i];
+		/* Wait until transmit is done */
+		while (!(usartDrv->SR & USART_SR_TC));
+	}
+}
+
+/*
+Sets buf to 
+*/
+size_t usartRead (usartDrvNum_t usartNum, char* buf, size_t len)
+{
+    USART_TypeDef * usartDrv = NULL;
+    size_t count = 0;
+
+    if (buf == NULL)
+    {
+        return 0;
+    }
+
+    if (checkUsartDrvNum (usartNum) != OK)
+    {
+        return 0;
+    }
+
+    usartDrv = usartDrvs[usartNum];
+
+    /* USART stopped or not enabled  */
+    if ((usartDrv->SR & USART_CR1_UE) == 0)
+    {
+        return 0;
+    }
+
+    while ((usartDrv->SR & USART_SR_RXNE) == 0)
+    { /* waiting for data */}
+    
+    while (count < len)
+    {
+        buf [count] = usartDrv->DR;
+        count++;
+    }
+    
+    return count;
+}
+
+/* Stub _write. Function called by printf - Locked to USART1 */
+int _write(int fd, char *buf, size_t len)
+{
+	usartWrite (USART_DRV_1, buf, len);
+	return len;
+}
+
 /* Private functions */
 
+/* Init USART_1 */
 static void usart1Init (void)
 {
     /* Init USART 1, Alternate function and IO Port A */
@@ -109,6 +195,7 @@ static void usart1Init (void)
 	GPIOA->CRH |=  GPIO_CRH_MODE9_1 | GPIO_CRH_MODE9_0;
 }
 
+/* Check USART number input by user */
 static STATUS checkUsartDrvNum (usartDrvNum_t usartNum)
 {
     if (usartNum > USART_DRV_3 || usartNum < USART_DRV_1)
@@ -119,11 +206,10 @@ static STATUS checkUsartDrvNum (usartDrvNum_t usartNum)
     return OK;
 }
 
-/* Configures the baud rate */
-static STATUS configBaud (USART_TypeDef * usart, uint32_t baud)
+/* Configures the baud rate - See section 27.3.4 from RM0008 Rev 21 */
+static STATUS configUsartBaud (USART_TypeDef * usart, uint32_t baud)
 {
 	/* 
-	See section 27.3.4 from RM0008 Rev 21
     Example for a baud of 115200 
 	Baud = fCLK / (16 * USARTDIV) 
 	USARTDIV = fCLK / (16 * Baud)

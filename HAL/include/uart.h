@@ -11,6 +11,7 @@
 
 /* Includes */
 #include <stdio.h>
+#include <string.h>
 #include <stm32f1xx.h>
 #include "clock.h"
 #include "app.h"
@@ -28,8 +29,11 @@ typedef enum
 
 /* Function Declarations */
 
-extern STATUS uartDrvInit (usartDrvNum_t usartNum, uint32_t baud);
-extern STATUS uartDrvEnable (usartDrvNum_t usartNum);
-extern STATUS uartDrvStop (usartDrvNum_t usartNum);
+extern STATUS usartDrvInit (usartDrvNum_t usartNum, uint32_t baud);
+extern STATUS usartDrvEnable (usartDrvNum_t usartNum);
+extern STATUS usartDrvStop (usartDrvNum_t usartNum);
+extern void usartWrite (usartDrvNum_t usartNum, char * buf, size_t len);
+extern size_t usartRead (usartDrvNum_t usartNum, char* buf, size_t len);
+extern int _write(int fd, char *buf, size_t len);
 
 #endif /* UART_H */
